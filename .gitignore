@@ -24,3 +24,4 @@ web/
 bin/abc
 bin/yosys-abc
 Toolkit/techlib/sky130.lib
+pre.md

@@ -6,6 +6,10 @@ A comprehensive open-source toolkit for EDA (Electronic Design Automation) data 
 **Affiliation**: ACE Lab, Shanghai Jiao Tong University  
 **License**: MIT License
 
+## Project Introduction Video
+
+[![Project Introduction Video](https://img.shields.io/badge/Video-Project%20Introduction-red)](https://bf.ink/s/1njsy3?password=2037)
+
 ## Vision
 
 As artificial intelligence continues to revolutionize Electronic Design Automation, there is a growing need for standardized, accessible data processing tools that bridge the gap between traditional EDA workflows and modern AI/ML frameworks. The AI4EDA Data Toolkit is built with the vision of:
