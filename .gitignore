@@ -7,7 +7,7 @@ build/
 .pytest_cache/
 .coverage
 *.log
-*.aig
+# *.aig
 *.bench
 *.graphml
 *.pt
