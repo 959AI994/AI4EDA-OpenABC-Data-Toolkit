@@ -9,6 +9,88 @@ import pickle
 from typing import Optional, Any, List
 
 
+# Compatibility shim for old PyG versions
+class DataEdgeAttr:
+    """Dummy class for backward compatibility with old PyG versions"""
+    pass
+
+
+def load_pyg_data_compatible(
+    file_path: str,
+    map_location: str = 'cpu',
+    extract_attrs: Optional[List[str]] = None
+) -> Any:
+    """
+    Load PyG Data object with compatibility across versions
+
+    Args:
+        file_path: Path to .pt file
+        map_location: Device location ('cpu' or 'cuda')
+        extract_attrs: Optional list of attributes to extract
+                      If provided, returns dict instead of Data object
+
+    Returns:
+        PyG Data object or attribute dictionary
+    """
+    # Try to add compatibility shims for old PyG versions
+    try:
+        import torch_geometric.data.data as tg_data
+        if not hasattr(tg_data, 'DataEdgeAttr'):
+            # Add shim for old PyG versions
+            tg_data.DataEdgeAttr = DataEdgeAttr
+    except Exception:
+        pass
+
+    # Load with compatibility for older PyG versions
+    try:
+        # Try with weights_only=False for new PyTorch
+        try:
+            data = torch.load(file_path, map_location=map_location, weights_only=False)
+        except TypeError:
+            # Older PyTorch versions don't have weights_only parameter
+            data = torch.load(file_path, map_location=map_location)
+    except (AttributeError, ModuleNotFoundError) as e:
+        # If loading fails due to missing class, use custom unpickler
+        if 'DataEdgeAttr' in str(e) or 'Can\'t get attribute' in str(e):
+            with open(file_path, 'rb') as f:
+                data = _compatible_unpickle(f, map_location)
+        else:
+            raise
+
+    # If extract_attrs is provided, extract specific attributes
+    if extract_attrs is not None:
+        result = {}
+        for attr_name in extract_attrs:
+            result[attr_name] = extract_pyg_attr(data, attr_name)
+        return result
+
+    # Return the data object as-is
+    return data
+
+
+def _compatible_unpickle(f, map_location='cpu'):
+    """
+    Custom unpickler to handle missing classes across PyG versions
+    """
+    import io
+
+    class CompatibleUnpickler(pickle.Unpickler):
+        def find_class(self, module, name):
+            # Handle missing DataEdgeAttr in old PyG
+            if name == 'DataEdgeAttr' and 'torch_geometric' in module:
+                return DataEdgeAttr
+            return super().find_class(module, name)
+
+    # Read the entire file
+    buffer = f.read()
+
+    # Create unpickler
+    unpickler = CompatibleUnpickler(io.BytesIO(buffer))
+
+    # Load the data
+    return unpickler.load()
+
+
 def extract_pyg_attr(data: Any, attr_name: str, default: Any = None) -> Any:
     """
     Extract attribute from PyG Data object, bypassing version checks
@@ -33,6 +115,7 @@ def extract_pyg_attr(data: Any, attr_name: str, default: Any = None) -> Any:
         pass
 
     # Method 2: Use pickle to convert format (bypasses version check completely)
+    # This is the KEY method for handling old PyG 1.x files in PyG 2.x
     try:
         # Re-serialize and deserialize to convert format
         pickled = pickle.dumps(data, protocol=4)
@@ -72,42 +155,6 @@ def extract_pyg_attr(data: Any, attr_name: str, default: Any = None) -> Any:
         pass
 
     return default
-
-
-def load_pyg_data_compatible(
-    file_path: str,
-    map_location: str = 'cpu',
-    extract_attrs: Optional[List[str]] = None
-) -> Any:
-    """
-    Load PyG Data object with compatibility across versions
-
-    Args:
-        file_path: Path to .pt file
-        map_location: Device location ('cpu' or 'cuda')
-        extract_attrs: Optional list of attributes to extract
-                      If provided, returns dict instead of Data object
-
-    Returns:
-        PyG Data object or attribute dictionary
-    """
-    # Load with compatibility for older PyG versions
-    # Use weights_only=False to allow loading old format
-    try:
-        data = torch.load(file_path, map_location=map_location, weights_only=False)
-    except TypeError:
-        # Older PyTorch versions don't have weights_only parameter
-        data = torch.load(file_path, map_location=map_location)
-
-    # If extract_attrs is provided, extract specific attributes
-    if extract_attrs is not None:
-        result = {}
-        for attr_name in extract_attrs:
-            result[attr_name] = extract_pyg_attr(data, attr_name)
-        return result
-
-    # Return the data object as-is
-    return data
 
 
 def safe_get_pyg_attr(data: Any, attr_name: str, default: Any = None) -> Any:

@@ -9,6 +9,8 @@ A comprehensive open-source toolkit for EDA (Electronic Design Automation) data 
   - BENCH to GraphML conversion
   - GraphML to PyTorch Geometric (.pt) conversion
   - Verilog to AIG conversion
+  - **AIG to PT (direct)** - One-step conversion from AIG to PyTorch Geometric
+  - **Verilog to PT (direct)** - One-step conversion from Verilog to PyTorch Geometric
 
 - **Metrics Calculation**
   - Area and delay computation using Liberty libraries
@@ -49,7 +51,9 @@ AI4EDA-OpenABC-Data-Toolkit/
 │   │   ├── aig_to_bench.py
 │   │   ├── bench_to_graphml.py
 │   │   ├── graphml_to_pt.py
-│   │   └── verilog_to_aig.py
+│   │   ├── verilog_to_aig.py
+│   │   ├── aig_to_pt.py       # Direct AIG→PT conversion
+│   │   └── verilog_to_pt.py   # Direct Verilog→PT conversion
 │   ├── core/                  # Core functionality
 │   │   ├── metrics.py         # Area/delay calculation
 │   │   └── synthesis_recipe.py
@@ -136,6 +140,40 @@ With top module specification:
 ai4eda convert verilog2aig input.v output.aig --top-module my_module
 ```
 
+#### AIG to PT (Direct - One Step)
+
+Convert AIG directly to PyTorch Geometric format without intermediate files:
+```bash
+ai4eda convert aig2pt input.aig output.pt
+```
+
+Keep intermediate files for debugging:
+```bash
+ai4eda convert aig2pt input.aig output.pt --keep-intermediate
+```
+
+Batch convert:
+```bash
+ai4eda convert aig2pt input_dir/ output_dir/ --batch --recursive
+```
+
+#### Verilog to PT (Direct - One Step)
+
+Convert Verilog directly to PyTorch Geometric format:
+```bash
+ai4eda convert verilog2pt input.v output.pt
+```
+
+With top module and keep intermediate files:
+```bash
+ai4eda convert verilog2pt input.v output.pt --top-module my_module --keep-intermediate
+```
+
+Batch convert:
+```bash
+ai4eda convert verilog2pt input_dir/ output_dir/ --batch --recursive
+```
+
 ### Metrics Calculation
 
 Calculate area and delay for an AIG file:
@@ -175,6 +213,8 @@ You can also use the toolkit as a Python library:
 from ai4eda.converters.aig_to_bench import convert_aig_to_bench
 from ai4eda.converters.bench_to_graphml import convert_bench_to_graphml
 from ai4eda.converters.graphml_to_pt import convert_graphml_to_pt
+from ai4eda.converters.aig_to_pt import convert_aig_to_pt
+from ai4eda.converters.verilog_to_pt import convert_verilog_to_pt
 
 # Convert AIG to BENCH
 success, msg = convert_aig_to_bench("input.aig", "output.bench")
@@ -184,6 +224,12 @@ success, msg = convert_bench_to_graphml("input.bench", "output.graphml")
 
 # Convert GraphML to PT
 success, msg = convert_graphml_to_pt("input.graphml", "output.pt")
+
+# Direct conversion: AIG to PT (one step)
+success, msg = convert_aig_to_pt("input.aig", "output.pt")
+
+# Direct conversion: Verilog to PT (one step)
+success, msg = convert_verilog_to_pt("input.v", "output.pt", top_module="my_module")
 ```
 
 ### Metrics Calculation
@@ -200,17 +246,33 @@ area, delay, msg = calculate_metrics(
 print(f"Area: {area}, Delay: {delay}")
 ```
 
-### PyG Data Loading (Cross-version Compatible)
+### PyG Data Loading (Recommended)
 
+**Best Practice: Use Auto Loader**
 ```python
-from ai4eda.utils.pyg_loader import load_pyg_data_compatible, extract_pyg_attr
+from ai4eda.utils.version_compat import load_pt_auto
 
-# Load PyG data (works with old and new PyG versions)
-data = load_pyg_data_compatible("graph.pt")
+# Automatically handles all PyG versions and formats
+data = load_pt_auto("circuit.pt")
 
 # Extract specific attributes safely
+x = data.x
+edge_index = data.edge_index
+```
+
+**Advanced: Version-Specific Loading**
+```python
+# For PyG 2.x environments
+from ai4eda.utils.pyg_loader import load_pyg_data_compatible, extract_pyg_attr
+
+data = load_pyg_data_compatible("graph.pt")
 edge_index = extract_pyg_attr(data, 'edge_index')
 node_type = extract_pyg_attr(data, 'node_type')
+
+# For PyG 1.x environments
+from ai4eda.utils.pyg_loader_v1 import load_pyg_data_v1
+
+data = load_pyg_data_v1("graph.pt")  # Auto-converts PyG 2.x files
 ```
 
 ## Testing
@@ -238,14 +300,85 @@ Run the example workflow:
 
 ### PyTorch Geometric Version Compatibility
 
-The toolkit automatically handles PyG version differences:
+The toolkit provides **full backward compatibility** for PyTorch Geometric data files, supporting all cross-version loading scenarios:
 
+| Your Environment | Load PyG 1.x Data | Load PyG 2.x Data |
+|------------------|-------------------|-------------------|
+| **PyG 2.x**      | ✅ Supported      | ✅ Supported      |
+| **PyG 1.x**      | ✅ Supported      | ✅ **Supported** (auto-converts) |
+
+#### Recommended: Use Auto Loader
+
+The easiest way is to use the automatic loader that detects your PyG version and handles conversions automatically:
+
+```python
+from ai4eda.utils.version_compat import load_pt_auto
+
+# Works in both PyG 1.x and 2.x environments
+# Automatically detects and converts if needed
+data = load_pt_auto("circuit.pt")
+```
+
+#### Manual Version-Specific Loading
+
+If you know your environment, you can use version-specific loaders:
+
+**For PyG 2.x environments:**
 ```python
 from ai4eda.utils.pyg_loader import load_pyg_data_compatible
 
-# This works regardless of PyG version
-data = load_pyg_data_compatible("old_format.pt")
-data_new = load_pyg_data_compatible("new_format.pt")
+# Load any PT file (PyG 1.x or 2.x format)
+data = load_pyg_data_compatible("circuit.pt")
+```
+
+**For PyG 1.x environments (e.g., openabc conda env):**
+```python
+from ai4eda.utils.pyg_loader_v1 import load_pyg_data_v1
+
+# Load any PT file, automatically converts PyG 2.x format if needed
+data = load_pyg_data_v1("circuit.pt")
+# If the file was generated by PyG 2.x, you'll see:
+# "Detected PyG 2.x format data, converting to PyG 1.x format..."
+```
+
+#### Common Use Case: Mixed Environment Workflow
+
+**Development with PyG 2.x:**
+```bash
+# Generate PT files using modern PyG 2.x
+ai4eda convert graphml2pt circuits/ output/
+```
+
+**Deployment with PyG 1.x (legacy systems/openabc):**
+```python
+# Load the same files in older PyG 1.x environment
+from ai4eda.utils.version_compat import load_pt_auto
+
+# Automatically handles the version difference!
+data = load_pt_auto("output/circuit.pt")
+```
+
+#### Check Your PyG Version
+
+To verify your environment and get recommendations:
+
+```bash
+python -m ai4eda.utils.version_compat
+```
+
+Output example:
+```
+============================================================
+PyG Environment Information
+============================================================
+PyTorch version: 1.10.0
+PyG version: 1.7.2
+PyG major version: 1.x
+
+✓ PyG 1.x detected
+  Recommended loader: pyg_loader_v1
+  Recommended converter: graphml_to_pt_v1
+============================================================
 ```
 
 ### Batch Processing
@@ -308,6 +441,28 @@ ai4eda convert aig2bench input.aig output.bench --abc-path /path/to/abc
 Install PyG following official instructions:
 ```bash
 pip install torch-geometric
+```
+
+### PyG Version Compatibility Issues
+
+If you encounter errors loading PT files across different PyG versions:
+
+**Error: "Can't get attribute 'DataEdgeAttr'"**
+- This means you're loading a PyG 2.x file in a PyG 1.x environment
+- **Solution**: Use the auto loader which handles conversion automatically:
+```python
+from ai4eda.utils.version_compat import load_pt_auto
+data = load_pt_auto("file.pt")  # Automatically converts!
+```
+
+**Check your PyG version:**
+```bash
+python -c "import torch_geometric; print(torch_geometric.__version__)"
+```
+
+**Verify compatibility:**
+```bash
+python -m ai4eda.utils.version_compat
 ```
 
 ### Liberty Library Issues

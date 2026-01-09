@@ -32,6 +32,12 @@ Examples:
   # Convert Verilog to AIG
   ai4eda convert verilog2aig input.v output.aig
 
+  # Convert AIG directly to PT (one-step)
+  ai4eda convert aig2pt input.aig output.pt
+
+  # Convert Verilog directly to PT (one-step)
+  ai4eda convert verilog2pt input.v output.pt
+
   # Calculate metrics (area/delay)
   ai4eda metrics input.aig --lib asap7.lib
 
@@ -78,6 +84,26 @@ Examples:
     verilog2aig_parser.add_argument('--top-module', help='Top module name')
     verilog2aig_parser.add_argument('--batch', action='store_true', help='Batch convert directory')
     verilog2aig_parser.add_argument('--recursive', action='store_true', help='Recursively search subdirectories')
+
+    # AIG to PT (direct)
+    aig2pt_parser = convert_subparsers.add_parser('aig2pt', help='Convert AIG directly to PyTorch Geometric')
+    aig2pt_parser.add_argument('input', help='Input .aig file or directory')
+    aig2pt_parser.add_argument('output', help='Output .pt file or directory')
+    aig2pt_parser.add_argument('--abc-path', help='Path to ABC executable')
+    aig2pt_parser.add_argument('--batch', action='store_true', help='Batch convert directory')
+    aig2pt_parser.add_argument('--recursive', action='store_true', help='Recursively search subdirectories')
+    aig2pt_parser.add_argument('--keep-intermediate', action='store_true', help='Keep intermediate files')
+
+    # Verilog to PT (direct)
+    verilog2pt_parser = convert_subparsers.add_parser('verilog2pt', help='Convert Verilog directly to PyTorch Geometric')
+    verilog2pt_parser.add_argument('input', help='Input .v file or directory')
+    verilog2pt_parser.add_argument('output', help='Output .pt file or directory')
+    verilog2pt_parser.add_argument('--yosys-abc-path', help='Path to yosys-abc executable')
+    verilog2pt_parser.add_argument('--abc-path', help='Path to ABC executable')
+    verilog2pt_parser.add_argument('--top-module', help='Top module name')
+    verilog2pt_parser.add_argument('--batch', action='store_true', help='Batch convert directory')
+    verilog2pt_parser.add_argument('--recursive', action='store_true', help='Recursively search subdirectories')
+    verilog2pt_parser.add_argument('--keep-intermediate', action='store_true', help='Keep intermediate files')
 
     # Metrics command
     metrics_parser = subparsers.add_parser('metrics', help='Calculate area and delay metrics')
@@ -174,6 +200,33 @@ def handle_convert(args):
         else:
             print(f"Converting {args.input} to {args.output}...")
             success, msg = converter.convert(args.input, args.output, args.top_module)
+            print(f"{'Success' if success else 'Failed'}: {msg}")
+
+    elif args.conversion == 'aig2pt':
+        from ai4eda.converters.aig_to_pt import AigToPTConverter
+        converter = AigToPTConverter(args.abc_path)
+
+        if args.batch or Path(args.input).is_dir():
+            print(f"Converting AIG files in {args.input} directly to PT...")
+            stats = converter.convert_batch(args.input, args.output, args.recursive, args.keep_intermediate)
+            print(f"Total: {stats['total']}, Success: {stats['success']}, Failed: {stats['failed']}")
+        else:
+            print(f"Converting {args.input} directly to {args.output}...")
+            success, msg = converter.convert(args.input, args.output, args.keep_intermediate)
+            print(f"{'Success' if success else 'Failed'}: {msg}")
+
+    elif args.conversion == 'verilog2pt':
+        from ai4eda.converters.verilog_to_pt import VerilogToPTConverter
+        converter = VerilogToPTConverter(args.yosys_abc_path, args.abc_path)
+
+        if args.batch or Path(args.input).is_dir():
+            print(f"Converting Verilog files in {args.input} directly to PT...")
+            stats = converter.convert_batch(args.input, args.output, args.recursive, args.keep_intermediate)
+            print(f"Total: {stats['total']}, Success: {stats['success']}, Failed: {stats['failed']}")
+        else:
+            print(f"Converting {args.input} directly to {args.output}...")
+            top_module = getattr(args, 'top_module', None)
+            success, msg = converter.convert(args.input, args.output, top_module, args.keep_intermediate)
             print(f"{'Success' if success else 'Failed'}: {msg}")
 
 
