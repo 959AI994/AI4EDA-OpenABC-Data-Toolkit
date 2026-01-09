@@ -2,7 +2,98 @@
 
 A comprehensive open-source toolkit for EDA (Electronic Design Automation) data processing and format conversion, specifically designed for AI4EDA applications.
 
-## Features
+**Developed by**: Jingxin Wang (jingxin.wang@sjtu.edu.cn)
+**Affiliation**: ACE Lab, Shanghai Jiao Tong University
+**License**: MIT License
+
+## Vision
+
+As artificial intelligence continues to revolutionize Electronic Design Automation, there is a growing need for standardized, accessible data processing tools that bridge the gap between traditional EDA workflows and modern AI/ML frameworks. The AI4EDA Data Toolkit is built with the vision of:
+
+- **Democratizing AI4EDA Research**: Providing researchers and engineers with easy-to-use tools for converting, processing, and analyzing EDA data in AI-friendly formats
+- **Building a Rich Data Ecosystem**: Offering diverse data types and formats to support various AI4EDA applications, from logic synthesis optimization to design space exploration
+- **Enabling Rapid Innovation**: Allowing the community to quickly experiment with different data representations and ML approaches without getting bogged down in data preprocessing
+- **Fostering Open Collaboration**: Creating an extensible platform where new converters, metrics, and AI-powered analysis tools can be easily integrated
+
+This repository serves as a foundation for the AI4EDA community, providing battle-tested tools for common data processing tasks while remaining flexible enough to accommodate emerging use cases. We are committed to continuously expanding the toolkit with more data types, AI-powered features, and analysis capabilities as the field evolves.
+
+## Quick Navigation
+
+📦 **Choose Your Interface:**
+- 🌐 [**Web Version**](#web-version) - User-friendly browser interface with AI-powered analysis (Recommended for quick tasks)
+- ⌨️ [**CLI Version**](#features-cli-version) - Command-line tools for automation and batch processing (Recommended for large-scale workflows)
+
+Both versions provide the same powerful functionality - choose based on your workflow preference!
+
+## Web Version
+
+The AI4EDA Data Toolkit provides a modern, user-friendly web interface for EDA data processing. Access all features through your browser with an intuitive interface.
+
+**Web Interface URL**: http://localhost:8080 (or your server IP)
+
+### Feature 1: Format Conversion
+
+Convert between different EDA file formats with drag-and-drop support.
+
+![Format Conversion Interface](image/README/FormatCconversion.jpg)
+
+**Supported Conversions:**
+- AIG to BENCH
+- BENCH to GraphML
+- GraphML to PyTorch Geometric (.pt)
+- Verilog to AIG
+- AIG to PyTorch (Direct)
+- Verilog to PyTorch (Direct)
+
+**Conversion Results:**
+
+![AIG to PyG Conversion Result](image/README/FormatConversionResult(aigtopyg).jpg)
+
+![AIG to GraphML Conversion Result](image/README/FormatConversionResult(aigtogml).jpg.jpg)
+
+### Feature 2: Metrics Analysis
+
+Calculate area and delay metrics for your designs using Liberty libraries.
+
+![Metrics Analysis Interface](image/README/metrics.jpg)
+
+**Features:**
+- Area and delay computation
+- Support for custom Liberty libraries (ASAP7 included)
+- Custom ABC optimization scripts
+- Batch processing support
+
+**Metrics Results:**
+
+![Metrics Calculation Result](image/README/metricresult.jpg)
+
+### Feature 3: AI-Powered Verilog Analysis
+
+Analyze your Verilog code using DeepSeek AI for code understanding, bug detection, and optimization suggestions.
+
+![AI Code Analysis Interface](image/README/AIanalysis.jpg)
+
+**Capabilities:**
+- Code explanation and documentation
+- Bug detection and potential issues
+- Optimization suggestions
+- Design pattern analysis
+- Custom questions about your code
+
+**AI Analysis in Action:**
+
+![AI Analysis Testing](image/README/AItest.jpg)
+
+**AI Analysis Results:**
+
+![AI Analysis Result](image/README/AIresult.jpg)
+
+### Getting Started with Web Interface
+
+For detailed instructions on starting and using the web interface, see [web/README.md](web/README.md).
+
+
+## Features (CLI Version)
 
 - **Format Conversion**
   - AIG to BENCH conversion
@@ -23,6 +114,7 @@ A comprehensive open-source toolkit for EDA (Electronic Design Automation) data 
 - **PyTorch Geometric Compatibility**
   - Cross-version PyG data loading
   - Compatible with both old and new PyG formats
+
 
 ## Installation
 
@@ -76,7 +168,52 @@ AI4EDA-OpenABC-Data-Toolkit/
 
 ## Usage
 
-### Command-line Interface
+You can use the toolkit in two ways:
+1. **🌐 Web Interface** (Recommended for beginners) - User-friendly browser-based interface
+2. **⌨️ Command-line Interface** (CLI) - For automation and batch processing
+
+### 🌐 Web Interface
+
+#### Starting the Web Server
+
+```bash
+cd web/
+./start_server.sh
+```
+
+Or run in the background as a daemon:
+
+```bash
+cd web/
+./run_daemon.sh start    # Start server
+./run_daemon.sh status   # Check status
+./run_daemon.sh stop     # Stop server
+./run_daemon.sh restart  # Restart server
+```
+
+#### Accessing the Web Interface
+
+Once started, open your browser and navigate to:
+- **Local:** http://localhost:5000
+- **Network:** http://YOUR_SERVER_IP:5000
+
+#### Using the Web Interface
+
+1. Select the conversion type from the dropdown
+2. Upload your file (drag & drop supported)
+3. Click "Convert File"
+4. Download the converted file
+
+**Features:**
+- ✅ Drag and drop file upload
+- ✅ Real-time conversion progress
+- ✅ Instant file download
+- ✅ Mobile-friendly responsive design
+- ✅ All conversion types supported
+
+For detailed web interface documentation, see [web/README.md](web/README.md).
+
+### ⌨️ Command-line Interface
 
 The toolkit provides a unified command-line interface:
 
@@ -478,7 +615,9 @@ Contributions are welcome! Please feel free to submit pull requests or open issu
 
 ## License
 
-MIT License
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+Copyright (c) 2026 Jingxin Wang, ACE Lab, Shanghai Jiao Tong University
 
 ## Citation
 
@@ -487,9 +626,10 @@ If you use this toolkit in your research, please cite:
 ```bibtex
 @software{ai4eda_toolkit,
   title={AI4EDA Data Toolkit},
-  author={AI4EDA Team},
+  author={Jingxin Wang},
   year={2026},
-  url={https://github.com/your-org/AI4EDA-OpenABC-Data-Toolkit}
+  institution={ACE Lab, Shanghai Jiao Tong University},
+  url={https://github.com/959AI994/AI4EDA-OpenABC-Data-Toolkit}
 }
 ```
 
@@ -502,7 +642,13 @@ If you use this toolkit in your research, please cite:
 
 ## Contact
 
-For questions and feedback, please open an issue on GitHub.
+**Developer**: Jingxin Wang
+**Email**: jingxin.wang@sjtu.edu.cn
+**Affiliation**: ACE Lab, Shanghai Jiao Tong University
+
+For questions and feedback, please:
+- Open an issue on GitHub
+- Contact via email for research collaboration
 
 ---
 

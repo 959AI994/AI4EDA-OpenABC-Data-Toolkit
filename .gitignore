@@ -18,6 +18,8 @@ test_data/recipes/*
 !test_data/aig/
 !test_data/verilog/
 
+web/
+
 # 大文件 - 不应提交到 Git
 bin/abc
 bin/yosys-abc
