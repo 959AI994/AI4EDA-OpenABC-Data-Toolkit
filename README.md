@@ -12,15 +12,13 @@ Watch our comprehensive introduction video to learn about the AI4EDA Data Toolki
 
 <div align="center">
 
-<video width="800" controls>
+<video width="800" controls preload="metadata" style="max-width: 100%; height: auto;">
   <source src="https://raw.githubusercontent.com/959AI994/AI4EDA-OpenABC-Data-Toolkit/main/video/20260109-214058.mp4" type="video/mp4">
   Your browser does not support the video tag. 
-  <a href="https://raw.githubusercontent.com/959AI994/AI4EDA-OpenABC-Data-Toolkit/main/video/20260109-214058.mp4">Click here to download the video</a>
+  <a href="https://raw.githubusercontent.com/959AI994/AI4EDA-OpenABC-Data-Toolkit/main/video/20260109-214058.mp4">Click here to view the video</a>
 </video>
 
 </div>
-
-> **Note**: If the video doesn't load, you can also [download it directly](https://raw.githubusercontent.com/959AI994/AI4EDA-OpenABC-Data-Toolkit/main/video/20260109-214058.mp4).
 
 ## Vision
 
