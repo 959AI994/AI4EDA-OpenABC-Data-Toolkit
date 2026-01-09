@@ -12,9 +12,11 @@ Watch our comprehensive introduction video to learn about the AI4EDA Data Toolki
 
 <div align="center">
 
-[![Watch the Video](https://img.shields.io/badge/▶️-Watch%20Introduction%20Video-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://bf.ink/s/1njsy3?password=2037)
+### ▶️ [Watch Introduction Video](https://bf.ink/s/1njsy3?password=2037)
 
-**Click the button above to watch the project introduction video**
+**Password: `2037`**
+
+*Click the link above to access the video (password-protected link)*
 
 </div>
 
