@@ -662,10 +662,7 @@ If you use this toolkit in your research, please cite:
 
 ## Contact
 
-**Developer**: Jingxin Wang
 **Email**: jingxin.wang@sjtu.edu.cn
-**Affiliation**: ACE Lab, Shanghai Jiao Tong University
-
 For questions and feedback, please:
 - Open an issue on GitHub
 - Contact via email for research collaboration
