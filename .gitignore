@@ -17,3 +17,8 @@ test_data/pt/*
 test_data/recipes/*
 !test_data/aig/
 !test_data/verilog/
+
+# 大文件 - 不应提交到 Git
+bin/abc
+bin/yosys-abc
+Toolkit/techlib/sky130.lib
