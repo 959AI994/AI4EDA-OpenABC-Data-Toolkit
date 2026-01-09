@@ -12,13 +12,15 @@ Watch our comprehensive introduction video to learn about the AI4EDA Data Toolki
 
 <div align="center">
 
-### ▶️ [Watch Introduction Video](https://bf.ink/s/1njsy3?password=2037)
-
-**Password: `2037`**
-
-*Click the link above to access the video (password-protected link)*
+<video width="800" controls>
+  <source src="https://raw.githubusercontent.com/959AI994/AI4EDA-OpenABC-Data-Toolkit/main/video/20260109-214058.mp4" type="video/mp4">
+  Your browser does not support the video tag. 
+  <a href="https://raw.githubusercontent.com/959AI994/AI4EDA-OpenABC-Data-Toolkit/main/video/20260109-214058.mp4">Click here to download the video</a>
+</video>
 
 </div>
+
+> **Note**: If the video doesn't load, you can also [download it directly](https://raw.githubusercontent.com/959AI994/AI4EDA-OpenABC-Data-Toolkit/main/video/20260109-214058.mp4).
 
 ## Vision
 
