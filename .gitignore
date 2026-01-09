@@ -7,16 +7,16 @@ build/
 .pytest_cache/
 .coverage
 *.log
-# *.aig
-# *.bench
-# *.graphml
-# *.pt
-# test_data/bench/*
-# test_data/graphml/*
-# test_data/pt/*
-# test_data/recipes/*
-# !test_data/aig/
-# !test_data/verilog/
+*.aig
+*.bench
+*.graphml
+*.pt
+test_data/bench/*
+test_data/graphml/*
+test_data/pt/*
+test_data/recipes/*
+!test_data/aig/
+!test_data/verilog/
 
 # 大文件 - 不应提交到 Git
 bin/abc
