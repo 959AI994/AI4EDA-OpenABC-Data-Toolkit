@@ -2,8 +2,8 @@
 
 A comprehensive open-source toolkit for EDA (Electronic Design Automation) data processing and format conversion, specifically designed for AI4EDA applications.
 
-**Developed by**: Jingxin Wang (jingxin.wang@sjtu.edu.cn)
-**Affiliation**: ACE Lab, Shanghai Jiao Tong University
+**Developed by**: Jingxin Wang (jingxin.wang@sjtu.edu.cn)  
+**Affiliation**: ACE Lab, Shanghai Jiao Tong University  
 **License**: MIT License
 
 ## Vision
