@@ -12,11 +12,12 @@ Watch our comprehensive introduction video to learn about the AI4EDA Data Toolki
 
 <div align="center">
 
-<video width="800" controls preload="metadata" style="max-width: 100%; height: auto;">
-  <source src="https://raw.githubusercontent.com/959AI994/AI4EDA-OpenABC-Data-Toolkit/main/video/20260109-214058.mp4" type="video/mp4">
-  Your browser does not support the video tag. 
-  <a href="https://raw.githubusercontent.com/959AI994/AI4EDA-OpenABC-Data-Toolkit/main/video/20260109-214058.mp4">Click here to view the video</a>
-</video>
+### 📥 Download Introduction Video
+
+[![Download Video](https://img.shields.io/badge/📥-Download%20Introduction%20Video%20(48.5%20MB)-FF6B6B?style=for-the-badge&logo=video&logoColor=white)](https://github.com/959AI994/AI4EDA-OpenABC-Data-Toolkit/raw/main/video/20260109-214058.mp4)
+
+**Click the button above to download and watch the video**
+
 
 </div>
 
