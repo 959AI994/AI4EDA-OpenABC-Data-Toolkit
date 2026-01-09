@@ -1,0 +1,1 @@
+read_aiger test_data/aig/div.aig; strash; resub -K 6; refactor; resub -K 10; resub; balance; resub -z; refactor -z; resub -K 10; write_bench test_data/recipes/output_1.bench
