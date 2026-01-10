@@ -11,24 +11,51 @@ from typing import Tuple, Optional
 
 
 class VerilogToAigConverter:
-    """Convert Verilog files to AIG format using Yosys-ABC"""
+    """Convert Verilog files to AIG format using Yosys and ABC"""
 
-    def __init__(self, yosys_abc_path: Optional[str] = None):
+    def __init__(self, yosys_abc_path: Optional[str] = None,
+                 yosys_path: Optional[str] = None):
         """
         Initialize converter
 
         Args:
             yosys_abc_path: Path to yosys-abc executable
+            yosys_path: Path to yosys executable (for complex Verilog)
         """
-        if yosys_abc_path is None:
-            # Try to find yosys-abc in project directory first
-            project_root = Path(__file__).parent.parent.parent
-            default_yosys_abc = project_root / "bin" / "yosys-abc"
-            if default_yosys_abc.exists():
-                self.yosys_abc_path = str(default_yosys_abc)
+        # Try to find yosys in project directory or user's yosys directory
+        project_root = Path(__file__).parent.parent.parent
+
+        # Set yosys path
+        if yosys_path is None:
+            # Try user's yosys directory first
+            user_yosys = Path("/home/wjx/yosys/yosys")
+            if user_yosys.exists():
+                self.yosys_path = str(user_yosys)
             else:
-                # Fallback to system yosys-abc
-                self.yosys_abc_path = "yosys-abc"
+                # Try project bin directory
+                project_yosys = project_root / "bin" / "yosys"
+                if project_yosys.exists():
+                    self.yosys_path = str(project_yosys)
+                else:
+                    # Fallback to system yosys
+                    self.yosys_path = "yosys"
+        else:
+            self.yosys_path = yosys_path
+
+        # Set yosys-abc path
+        if yosys_abc_path is None:
+            # Try user's yosys directory first
+            user_abc = Path("/home/wjx/yosys/yosys-abc")
+            if user_abc.exists():
+                self.yosys_abc_path = str(user_abc)
+            else:
+                # Try project bin directory
+                default_yosys_abc = project_root / "bin" / "yosys-abc"
+                if default_yosys_abc.exists():
+                    self.yosys_abc_path = str(default_yosys_abc)
+                else:
+                    # Fallback to system yosys-abc
+                    self.yosys_abc_path = "yosys-abc"
         else:
             self.yosys_abc_path = yosys_abc_path
 
@@ -36,7 +63,7 @@ class VerilogToAigConverter:
                top_module: Optional[str] = None,
                timeout: int = 300) -> Tuple[bool, str]:
         """
-        Convert Verilog file to AIG format
+        Convert Verilog file to AIG format using Yosys
 
         Args:
             verilog_file: Path to input .v file
@@ -52,33 +79,94 @@ class VerilogToAigConverter:
         if output_dir:
             os.makedirs(output_dir, exist_ok=True)
 
-        # Build ABC command
-        # Read verilog, synthesize to AIG, write AIG
+        # Build Yosys script
+        verilog_path = os.path.abspath(verilog_file)
+        aig_path = os.path.abspath(aig_file)
+
+        # Yosys script to read Verilog, synthesize, and export to AIGER
+        # AIGER format only supports AND gates and inverters
         if top_module:
-            abc_cmd = f'read -m {top_module} {verilog_file}; strash; write_aiger {aig_file}; quit'
+            yosys_script = f"""
+read_verilog {verilog_path}
+hierarchy -top {top_module}
+proc
+flatten
+tribuf -logic
+deminout
+opt
+memory
+techmap
+opt
+aigmap
+clean
+write_aiger {aig_path}
+"""
         else:
-            abc_cmd = f'read {verilog_file}; strash; write_aiger {aig_file}; quit'
+            yosys_script = f"""
+read_verilog {verilog_path}
+hierarchy -auto-top
+proc
+flatten
+tribuf -logic
+deminout
+opt
+memory
+techmap
+opt
+aigmap
+clean
+write_aiger {aig_path}
+"""
 
         try:
             result = subprocess.run(
-                [self.yosys_abc_path, '-c', abc_cmd],
+                [self.yosys_path, '-p', yosys_script],
                 capture_output=True,
                 text=True,
                 timeout=timeout
             )
 
             if result.returncode == 0 and os.path.exists(aig_file):
-                # Get file size
                 size = os.path.getsize(aig_file)
                 return True, f"Success ({size} bytes)"
             else:
                 error_msg = result.stderr if result.stderr else result.stdout
-                return False, f"Conversion error: {error_msg[:200]}"
+
+                # Provide helpful error messages
+                if "ERROR:" in error_msg:
+                    # Extract the actual error message
+                    error_lines = [line for line in error_msg.split('\n') if 'ERROR:' in line]
+                    if error_lines:
+                        error_line = error_lines[0]
+
+                        # Check for specific error types
+                        if "Unsupported cell type: $_SDFF" in error_line or "Unsupported cell type: $_DFF" in error_line:
+                            return False, (
+                                "This Verilog file contains sequential logic (flip-flops/latches) which "
+                                "cannot be directly converted to combinational AIG format. "
+                                "AIG (And-Inverter Graph) only represents combinational logic. "
+                                "Consider: (1) extracting only the combinational logic, or "
+                                "(2) using a different format that supports sequential circuits."
+                            )
+                        elif "Unsupported cell type" in error_line:
+                            # Extract cell type
+                            import re
+                            match = re.search(r'Unsupported cell type: (\S+)', error_line)
+                            cell_type = match.group(1) if match else "unknown"
+                            return False, (
+                                f"Synthesis generated unsupported cell type: {cell_type}. "
+                                f"This may indicate the circuit uses advanced features that "
+                                f"cannot be converted to basic AIG format (AND gates + inverters only)."
+                            )
+                        else:
+                            return False, f"Verilog synthesis error: {error_line}"
+
+                return False, f"Verilog conversion failed: {error_msg[:300]}"
 
         except subprocess.TimeoutExpired:
             return False, f"Timeout (>{timeout}s)"
         except FileNotFoundError:
-            return False, f"yosys-abc not found at: {self.yosys_abc_path}"
+            return False, f"Yosys not found at: {self.yosys_path}. Please install Yosys or set the correct path."
         except Exception as e:
             return False, f"Error: {str(e)}"
 
@@ -115,7 +203,19 @@ class VerilogToAigConverter:
                 return True, f"Success ({size} bytes)"
             else:
                 error_msg = result.stderr if result.stderr else result.stdout
-                return False, f"Conversion error: {error_msg[:200]}"
+
+                # Provide helpful error messages
+                if "Cannot parse" in error_msg or "syntax error" in error_msg.lower():
+                    return False, (
+                        f"Verilog syntax not supported by yosys-abc. "
+                        f"This file may contain advanced Verilog features (parameters, generate blocks, etc.) "
+                        f"that require full Yosys. Try using Yosys first to synthesize to a simpler format, "
+                        f"or simplify the Verilog code. Error: {error_msg[:150]}"
+                    )
+                elif "Cannot open file" in error_msg:
+                    return False, f"Cannot open Verilog file. Please check the file path and permissions."
+                else:
+                    return False, f"Verilog conversion failed: {error_msg[:200]}"
 
         except subprocess.TimeoutExpired:
             return False, f"Timeout (>{timeout}s)"
