@@ -49,7 +49,7 @@ Both versions provide the same powerful functionality - choose based on your wor
 
 The AI4EDA Data Toolkit provides a modern, user-friendly web interface for EDA data processing. Access all features through your browser with an intuitive interface.
 
-**Web Interface URL**: http://localhost:8080 (or your server IP)
+**Web Interface URL**: http://localhost:8080 
 
 ### Feature 1: Format Conversion
 
@@ -149,7 +149,7 @@ For detailed instructions on starting and using the web interface, see [web/READ
 ### Install from source
 
 ```bash
-git clone https://github.com/your-org/AI4EDA-OpenABC-Data-Toolkit.git
+git clone https://github.com/959AI994/AI4EDA-OpenABC-Data-Toolkit.git
 cd AI4EDA-OpenABC-Data-Toolkit
 pip install -r requirements.txt
 pip install -e .
@@ -165,7 +165,7 @@ If you need to compile ABC from source, **you must modify the ABC source code** 
 
 For detailed instructions, see [bin/README.md](bin/README.md).
 
-## Project Structure
+<!-- ## Project Structure
 
 ```
 AI4EDA-OpenABC-Data-Toolkit/
@@ -195,7 +195,7 @@ AI4EDA-OpenABC-Data-Toolkit/
 │   ├── graphml/               # Generated GraphML files
 │   └── pt/                    # Generated PT files
 └── ai4eda-toolkit             # Main executable script
-```
+``` -->
 
 ## Usage
 
@@ -203,7 +203,7 @@ You can use the toolkit in two ways:
 1. **🌐 Web Interface** (Recommended for beginners) - User-friendly browser-based interface
 2. **⌨️ Command-line Interface** (CLI) - For automation and batch processing
 
-### 🌐 Web Interface
+<!-- ### 🌐 Web Interface
 
 #### Starting the Web Server
 
@@ -226,14 +226,14 @@ cd web/
 
 Once started, open your browser and navigate to:
 - **Local:** http://localhost:5000
-- **Network:** http://YOUR_SERVER_IP:5000
+- **Network:** http://SERVER_IP:5000
 
 #### Using the Web Interface
 
 1. Select the conversion type from the dropdown
 2. Upload your file (drag & drop supported)
 3. Click "Convert File"
-4. Download the converted file
+4. Download the converted file -->
 
 ### ⌨️ Command-line Interface
 
@@ -650,7 +650,7 @@ If you use this toolkit in your research, please cite:
   title={AI4EDA Data Toolkit},
   author={Jingxin Wang},
   year={2026},
-  institution={ACE Lab, Shanghai Jiao Tong University},
+  institution={Global College, Shanghai Jiao Tong University},
   url={https://github.com/959AI994/AI4EDA-OpenABC-Data-Toolkit}
 }
 ```
