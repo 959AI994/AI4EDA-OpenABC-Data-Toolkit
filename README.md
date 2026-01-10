@@ -144,6 +144,7 @@ For detailed instructions on starting and using the web interface, see [web/READ
 - NetworkX
 - PyTorch
 - PyTorch Geometric
+- ABC tool (see [bin/README.md](bin/README.md) for compilation instructions)
 
 ### Install from source
 
@@ -153,6 +154,16 @@ cd AI4EDA-OpenABC-Data-Toolkit
 pip install -r requirements.txt
 pip install -e .
 ```
+
+### ⚠️ Important: ABC Compilation Note
+
+If you need to compile ABC from source, **you must modify the ABC source code** before compilation. The `write_bench` function needs to be configured to output **BENCH format** instead of **LUT format**.
+
+**Location**: `abc/src/base/io/ioWriteBenc.c` (the `write_bench` function)
+
+**What to change**: Modify the function to output standard gate-level BENCH format rather than LUT format. This typically involves adjusting the format selection logic within the function.
+
+For detailed instructions, see [bin/README.md](bin/README.md).
 
 ## Project Structure
 
@@ -223,15 +234,6 @@ Once started, open your browser and navigate to:
 2. Upload your file (drag & drop supported)
 3. Click "Convert File"
 4. Download the converted file
-
-**Features:**
-- ✅ Drag and drop file upload
-- ✅ Real-time conversion progress
-- ✅ Instant file download
-- ✅ Mobile-friendly responsive design
-- ✅ All conversion types supported
-
-For detailed web interface documentation, see [web/README.md](web/README.md).
 
 ### ⌨️ Command-line Interface
 
