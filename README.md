@@ -6,23 +6,26 @@ A comprehensive open-source toolkit for EDA (Electronic Design Automation) data 
 **Affiliation**: ACE Lab, Shanghai Jiao Tong University  
 **License**: MIT License
 
-## 🎥 Project Introduction Video
+## 🎥 Project Introduction Videos
 
-Watch our comprehensive introduction video to learn about the AI4EDA Data Toolkit's features, capabilities, and how to get started:
+Watch our comprehensive introduction videos to learn about the AI4EDA Data Toolkit's features, capabilities, and how to get started:
 
 <div align="center">
 
-### 📥 Download Introduction Video
+### 📥 Watch Web Video
 
-[![Download Video](https://img.shields.io/badge/📥-Download%20from%20GitHub%20(48.5%20MB)-FF6B6B?style=for-the-badge&logo=github&logoColor=white)](https://github.com/959AI994/AI4EDA-OpenABC-Data-Toolkit/raw/main/video/20260109-214058.mp4)
-
-
-**Click the buttons above to download and watch the video**
+[![Download Web Video](https://img.shields.io/badge/📥-Web%20Video%20(41%20MB)-4A90E2?style=for-the-badge&logo=github&logoColor=white)](https://github.com/959AI994/AI4EDA-OpenABC-Data-Toolkit/raw/main/video/Web-Video.mp4)
 
 
-[![Cloud Download](https://img.shields.io/badge/☁️-Cloud%20Download-4A90E2?style=for-the-badge&logo=cloud&logoColor=white)](https://bf.ink/s/1njsy3?password=2037)
+### 📥 Watch CLI Video
 
-*Cloud download password: `2037`*
+[![Download CLI Video](https://img.shields.io/badge/📥-CLI%20Video%20(29%20MB)-FF6B6B?style=for-the-badge&logo=github&logoColor=white)](https://github.com/959AI994/AI4EDA-OpenABC-Data-Toolkit/raw/main/video/CLI-Video.mp4)
+**Click the buttons above to download and watch the videos**
+
+
+<!-- [![Cloud Download](https://img.shields.io/badge/☁️-Cloud%20Download-4A90E2?style=for-the-badge&logo=cloud&logoColor=white)](https://bf.ink/s/1njsy3?password=2037)
+
+*Cloud download password: `2037`* -->
 
 </div>
 
