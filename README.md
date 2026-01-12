@@ -458,6 +458,170 @@ Run the example workflow:
 ./ai4eda-toolkit recipe generate test_data/aig/div.aig test_data/recipes --num-recipes 10
 ```
 
+## PyG Data Structure
+
+The PyTorch Geometric (PyG) data format generated from AIG files represents a complete AIG circuit as a single graph. Each `.pt` file contains one `torch_geometric.data.Data` object that fully represents one AIG circuit.
+
+### Conversion Flow
+
+The conversion from AIG to PyG follows this chain:
+**AIG → BENCH → GraphML → PT (PyG)**
+
+Each `.aig` file is converted to one PyG `Data` object representing one complete graph.
+
+### Data Structure Overview
+
+The PyG `Data` object contains the following information:
+
+#### 1. **Graph Structure**
+
+##### `edge_index` (Core Structure)
+- **Type**: `torch.LongTensor`
+- **Shape**: `[2, E]` where E is the number of edges
+- **Meaning**: Represents all edge connections in the graph
+- **Format**: 
+  ```python
+  edge_index = [[source_node_1, source_node_2, ...],
+                [target_node_1, target_node_2, ...]]
+  ```
+- **Example**: If `edge_index = [[0, 1, 2], [1, 2, 3]]`, it represents:
+  - Node 0 → Node 1
+  - Node 1 → Node 2
+  - Node 2 → Node 3
+
+#### 2. **Node Attributes** (Node Features)
+
+Each node contains the following attributes (ordered by node index):
+
+##### `node_id`
+- **Type**: `List[str]` or `torch.Tensor`
+- **Meaning**: Original identifier of the node (signal name from AIG circuit)
+- **Example**: `["a", "b", "n1", "out"]`
+
+##### `node_type`
+- **Type**: `torch.LongTensor`
+- **Shape**: `[N]` where N is the number of nodes
+- **Meaning**: Type of each node
+- **Values**:
+  - `0`: **PI** (Primary Input) - Primary input node
+  - `1`: **PO** (Primary Output) - Primary output node
+  - `2`: **Internal** - Internal node (AND gate)
+- **Example**: `[0, 0, 2, 1]` means nodes 0 and 1 are inputs, node 2 is internal, and node 3 is output
+
+##### `num_inverted_predecessors`
+- **Type**: `torch.LongTensor`
+- **Shape**: `[N]`
+- **Meaning**: Number of inverted predecessors for this node (how many inputs are inverted via NOT gates)
+- **Usage**: Indicates how many inverted signals this node receives
+
+#### 3. **Edge Attributes** (Edge Features)
+
+##### `edge_type`
+- **Type**: `torch.LongTensor`
+- **Shape**: `[E]` where E is the number of edges
+- **Meaning**: Type of each edge, corresponding to the order in `edge_index`
+- **Values**:
+  - `0`: **BUFF** (Buffer) - Direct connection, no inversion
+  - `1`: **NOT** (Inverter) - Inverted connection
+- **Example**: If `edge_type = [0, 1, 0]`, it means:
+  - 1st edge is BUFF (no inversion)
+  - 2nd edge is NOT (inverted)
+  - 3rd edge is BUFF (no inversion)
+
+#### 4. **Graph-Level Statistics** (Graph-level Features)
+
+These are global properties of the entire graph:
+
+##### `longest_path`
+- **Type**: `torch.LongTensor` or scalar
+- **Meaning**: Length of the longest path in the graph (critical path length)
+
+##### `and_nodes`
+- **Type**: `torch.LongTensor` or scalar
+- **Meaning**: Number of internal AND nodes
+
+##### `pi`
+- **Type**: `torch.LongTensor` or scalar
+- **Meaning**: Number of Primary Input nodes
+
+##### `po`
+- **Type**: `torch.LongTensor` or scalar
+- **Meaning**: Number of Primary Output nodes
+
+##### `not_edges`
+- **Type**: `torch.LongTensor` or scalar
+- **Meaning**: Number of NOT edges
+
+##### `num_nodes`
+- **Type**: Integer
+- **Meaning**: Total number of nodes in the graph
+
+### How AIG Circuits are Represented
+
+#### Graph Representation
+
+PyG uses **COO (Coordinate) format** (adjacency list) to represent graphs:
+
+1. **Node Numbering**: All nodes are renumbered as `0, 1, 2, ..., N-1`
+2. **Edge Representation**: All edge connections are stored via `edge_index`
+3. **Node Features**: Each node has corresponding attribute vectors (`node_type`, `num_inverted_predecessors`, etc.)
+4. **Edge Features**: Each edge has a corresponding type (`edge_type`)
+
+#### AIG Circuit to Graph Mapping
+
+According to the conversion logic in `bench_to_graphml.py`:
+
+```
+AIG Circuit Elements → Graph Nodes/Edges
+├── INPUT signals → PI nodes (node_type=0)
+├── OUTPUT signals → PO nodes (node_type=1)  
+├── AND gates → Internal nodes (node_type=2)
+├── Direct connections → BUFF edges (edge_type=0)
+└── Inverted connections → NOT edges (edge_type=1)
+```
+
+### Data Format Summary
+
+| Field Name | Type | Shape | Meaning |
+|------------|------|-------|---------|
+| `edge_index` | LongTensor | [2, E] | Edge connections (core graph structure) |
+| `node_type` | LongTensor | [N] | Node type (0=PI, 1=PO, 2=Internal) |
+| `node_id` | List/Tensor | [N] | Original node identifiers |
+| `num_inverted_predecessors` | LongTensor | [N] | Number of inverted predecessors |
+| `edge_type` | LongTensor | [E] | Edge type (0=BUFF, 1=NOT) |
+| `num_nodes` | int | scalar | Total number of nodes |
+| `longest_path` | LongTensor | scalar | Longest path length |
+| `pi`, `po`, `and_nodes`, `not_edges` | LongTensor | scalar | Statistics for each node/edge type |
+
+### Example Data Representation
+
+For a simple AIG circuit, the PyG data might look like:
+
+```python
+# Graph structure
+edge_index = torch.tensor([
+    [0, 1, 2, 3],  # Source nodes
+    [2, 2, 3, 4]   # Target nodes
+], dtype=torch.long)
+# Represents: 0→2, 1→2, 2→3, 3→4
+
+# Node attributes
+node_type = torch.tensor([0, 0, 2, 2, 1])  # PI, PI, Internal, Internal, PO
+node_id = ["a", "b", "n1", "n2", "out"]
+num_inverted_predecessors = torch.tensor([0, 0, 0, 1, 0])
+
+# Edge attributes
+edge_type = torch.tensor([0, 0, 0, 0])  # All BUFF edges
+
+# Graph statistics
+num_nodes = 5
+pi = 2
+po = 1
+and_nodes = 2
+```
+
+This representation fully captures the structure and properties of AIG circuits, making it suitable for graph neural networks to perform circuit analysis and optimization tasks.
+
 ## Advanced Features
 
 ### PyTorch Geometric Version Compatibility
