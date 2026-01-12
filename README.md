@@ -188,7 +188,7 @@ AI4EDA-OpenABC-Data-Toolkit/
 │   └── cli.py                 # Command-line interface
 ├── bin/                       # Binary tools
 │   ├── abc                    # ABC synthesis tool
-│   └── yosys-abc              # Yosys-ABC tool
+│   └── yosys                  # Yosys synthesis tool
 ├── libs/                      # Liberty libraries
 │   └── asap7.lib              # ASAP7 library
 ├── test_data/                 # Test data
@@ -726,7 +726,7 @@ print(f"Converted {stats['success']}/{stats['total']} files")
 ## Tools Included
 
 - **ABC**: Berkeley ABC synthesis tool (v1.0)
-- **Yosys-ABC**: Yosys integrated ABC tool
+- **Yosys**: Yosys synthesis tool
 - **ASAP7 Library**: 7nm ASAP library for technology mapping
 
 ## Directory Structure for Data
@@ -825,7 +825,7 @@ If you use this toolkit in your research, please cite:
 ## Acknowledgments
 
 - Berkeley ABC team for the ABC synthesis tool
-- YosysHQ for Yosys-ABC integration
+- YosysHQ for Yosys synthesis tool
 - PyTorch Geometric team for the graph learning framework
 - OpenABC project for dataset inspiration
 

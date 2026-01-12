@@ -21,6 +21,7 @@ test_data/recipes/*
 web/
 
 # 大文件 - 不应提交到 Git
+bin/
 bin/abc
 bin/yosys-abc
 Toolkit/techlib/sky130.lib

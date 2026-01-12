@@ -7,7 +7,8 @@ This directory should contain the compiled binary tools required by the toolkit.
 You need to compile and place the following tools in this directory:
 
 - **`abc`** - ABC synthesis tool
-- **`yosys-abc`** - Yosys-ABC tool (from Yosys project)
+- **`yosys`** - Yosys synthesis tool (from Yosys project)
+- **`yosys-abc`** - Yosys-ABC tool (from Yosys project, optional)
 
 ## Installation Instructions
 
@@ -120,7 +121,16 @@ Verify that `write_bench` outputs BENCH format:
 cat test.bench  # Should show gate-level netlist (AND, OR, NOT), not LUT format
 ```
 
-#### Yosys-ABC Tool
+#### Yosys Tool
+
+```bash
+git clone https://github.com/YosysHQ/yosys.git
+cd yosys
+make
+cp yosys /path/to/AI4EDA-OpenABC-Data-Toolkit/bin/
+```
+
+#### Yosys-ABC Tool (Optional)
 
 ```bash
 git clone https://github.com/YosysHQ/yosys.git
@@ -131,7 +141,7 @@ cp yosys-abc /path/to/AI4EDA-OpenABC-Data-Toolkit/bin/
 
 ### Option 2: Use System Installed Tools
 
-If you have ABC and Yosys-ABC installed system-wide, the toolkit will automatically fall back to using them if the binaries are not found in this directory.
+If you have ABC and Yosys installed system-wide, the toolkit will automatically fall back to using them if the binaries are not found in this directory.
 
 ## Verification
 
@@ -139,6 +149,7 @@ After placing the binaries, verify they work:
 
 ```bash
 ./bin/abc -h
+./bin/yosys --version
 ./bin/yosys-abc -h
 ```
 

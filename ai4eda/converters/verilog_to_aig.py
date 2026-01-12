@@ -22,40 +22,30 @@ class VerilogToAigConverter:
             yosys_abc_path: Path to yosys-abc executable
             yosys_path: Path to yosys executable (for complex Verilog)
         """
-        # Try to find yosys in project directory or user's yosys directory
+        # Try to find yosys in project directory
         project_root = Path(__file__).parent.parent.parent
 
         # Set yosys path
         if yosys_path is None:
-            # Try user's yosys directory first
-            user_yosys = Path("/home/wjx/yosys/yosys")
-            if user_yosys.exists():
-                self.yosys_path = str(user_yosys)
+            # Try project bin directory first
+            project_yosys = project_root / "bin" / "yosys"
+            if project_yosys.exists():
+                self.yosys_path = str(project_yosys)
             else:
-                # Try project bin directory
-                project_yosys = project_root / "bin" / "yosys"
-                if project_yosys.exists():
-                    self.yosys_path = str(project_yosys)
-                else:
-                    # Fallback to system yosys
-                    self.yosys_path = "yosys"
+                # Fallback to system yosys
+                self.yosys_path = "yosys"
         else:
             self.yosys_path = yosys_path
 
         # Set yosys-abc path
         if yosys_abc_path is None:
-            # Try user's yosys directory first
-            user_abc = Path("/home/wjx/yosys/yosys-abc")
-            if user_abc.exists():
-                self.yosys_abc_path = str(user_abc)
+            # Try project bin directory first
+            default_yosys_abc = project_root / "bin" / "yosys-abc"
+            if default_yosys_abc.exists():
+                self.yosys_abc_path = str(default_yosys_abc)
             else:
-                # Try project bin directory
-                default_yosys_abc = project_root / "bin" / "yosys-abc"
-                if default_yosys_abc.exists():
-                    self.yosys_abc_path = str(default_yosys_abc)
-                else:
-                    # Fallback to system yosys-abc
-                    self.yosys_abc_path = "yosys-abc"
+                # Fallback to system yosys-abc
+                self.yosys_abc_path = "yosys-abc"
         else:
             self.yosys_abc_path = yosys_abc_path
 
