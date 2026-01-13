@@ -8,7 +8,7 @@ You need to compile and place the following tools in this directory:
 
 - **`abc`** - ABC synthesis tool
 - **`yosys`** - Yosys synthesis tool (from Yosys project)
-- **`yosys-abc`** - Yosys-ABC tool (from Yosys project, optional)
+<!-- - **`yosys-abc`** - Yosys-ABC tool (from Yosys project, optional) -->
 
 ## Installation Instructions
 

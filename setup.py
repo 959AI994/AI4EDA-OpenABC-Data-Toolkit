@@ -4,13 +4,13 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setup(
-    name="ai4eda-toolkit",
+    name="AI4EDA-Data-Toolkit",
     version="0.1.0",
-    author="AI4EDA Team",
+    author="Jingxin Wang",
     description="A comprehensive toolkit for EDA data processing and format conversion",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/your-org/AI4EDA-OpenABC-Data-Toolkit",
+    url="https://github.com/959AI994/AI4EDA-OpenABC-Data-Toolkit",
     packages=find_packages(),
     classifiers=[
         "Development Status :: 3 - Alpha",
