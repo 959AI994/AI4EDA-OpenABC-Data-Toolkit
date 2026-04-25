@@ -158,9 +158,24 @@ pip install -r requirements.txt
 pip install -e .
 ```
 
-### ⚠️ Important: ABC Compilation Note
+### ⚠️ Important: BENCH Format Mode (One-Click)
 
-If you need to compile ABC from source, **you must modify the ABC source code** before compilation. The `write_bench` function needs to be configured to output **BENCH format** instead of **LUT format**.
+Default behavior is now **gate-level BENCH**.
+You can still override mode with one env var:
+
+```bash
+export AI4EDA_BENCH_FORMAT=gate   # or: auto / lut
+```
+
+This works for standalone `ai4eda` usage and wrappers that call this toolkit.
+You can also override per command:
+
+```bash
+ai4eda convert aig2bench in.aig out.bench --bench-format gate
+ai4eda convert aig2pt in.aig out.pt --bench-format gate
+```
+
+If your local ABC/yosys-abc build still cannot produce expected gate-level BENCH, then patch ABC source as fallback:
 
 **Location**: `abc/src/base/io/ioWriteBenc.c` (the `write_bench` function)
 

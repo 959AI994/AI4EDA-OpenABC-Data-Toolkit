@@ -13,13 +13,15 @@ from typing import Tuple, Optional
 class AigToBenchConverter:
     """Convert AIG files to BENCH format using ABC"""
 
-    def __init__(self, abc_path: Optional[str] = None, bench_format: str = "auto"):
+    def __init__(self, abc_path: Optional[str] = None, bench_format: Optional[str] = None):
         """
         Initialize converter
 
         Args:
             abc_path: Path to ABC executable. If None, uses default location
-            bench_format: Desired BENCH output mode: "auto" | "gate" | "lut"
+            bench_format: Desired BENCH output mode: "auto" | "gate" | "lut".
+                         If None, read from env AI4EDA_BENCH_FORMAT (fallback CKTCLAW_BENCH_FORMAT),
+                         default "gate".
         """
         if abc_path is None:
             # Try to find ABC in project directory first (prefer abc over yosys-abc)
@@ -33,9 +35,10 @@ class AigToBenchConverter:
         else:
             self.abc_path = abc_path
 
-        mode = (bench_format or "auto").strip().lower()
+        env_mode = os.environ.get("AI4EDA_BENCH_FORMAT") or os.environ.get("CKTCLAW_BENCH_FORMAT")
+        mode = (bench_format or env_mode or "gate").strip().lower()
         if mode not in {"auto", "gate", "lut"}:
-            mode = "auto"
+            mode = "gate"
         self.bench_format = mode
 
     @staticmethod
@@ -170,7 +173,7 @@ class AigToBenchConverter:
 
 def convert_aig_to_bench(aig_file: str, bench_file: str,
                         abc_path: Optional[str] = None,
-                        bench_format: str = "auto") -> Tuple[bool, str]:
+                        bench_format: Optional[str] = None) -> Tuple[bool, str]:
     """
     Convenience function to convert a single AIG file to BENCH
 

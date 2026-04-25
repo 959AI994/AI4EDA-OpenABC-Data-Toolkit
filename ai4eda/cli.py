@@ -59,6 +59,8 @@ Examples:
     aig2bench_parser.add_argument('input', help='Input .aig file or directory')
     aig2bench_parser.add_argument('output', help='Output .bench file or directory')
     aig2bench_parser.add_argument('--abc-path', help='Path to ABC executable')
+    aig2bench_parser.add_argument('--bench-format', choices=['auto', 'gate', 'lut'], default=None,
+                                  help='BENCH output format mode (default: env AI4EDA_BENCH_FORMAT or gate)')
     aig2bench_parser.add_argument('--batch', action='store_true', help='Batch convert directory')
     aig2bench_parser.add_argument('--recursive', action='store_true', help='Recursively search subdirectories')
 
@@ -90,6 +92,8 @@ Examples:
     aig2pt_parser.add_argument('input', help='Input .aig file or directory')
     aig2pt_parser.add_argument('output', help='Output .pt file or directory')
     aig2pt_parser.add_argument('--abc-path', help='Path to ABC executable')
+    aig2pt_parser.add_argument('--bench-format', choices=['auto', 'gate', 'lut'], default=None,
+                               help='BENCH output format mode for AIG->BENCH step (default: env or gate)')
     aig2pt_parser.add_argument('--batch', action='store_true', help='Batch convert directory')
     aig2pt_parser.add_argument('--recursive', action='store_true', help='Recursively search subdirectories')
     aig2pt_parser.add_argument('--keep-intermediate', action='store_true', help='Keep intermediate files')
@@ -152,7 +156,7 @@ def handle_convert(args):
     """Handle conversion commands"""
     if args.conversion == 'aig2bench':
         from ai4eda.converters.aig_to_bench import AigToBenchConverter
-        converter = AigToBenchConverter(args.abc_path)
+        converter = AigToBenchConverter(args.abc_path, bench_format=args.bench_format)
 
         if args.batch or Path(args.input).is_dir():
             print(f"Converting AIG files in {args.input} to BENCH...")
@@ -204,7 +208,7 @@ def handle_convert(args):
 
     elif args.conversion == 'aig2pt':
         from ai4eda.converters.aig_to_pt import AigToPTConverter
-        converter = AigToPTConverter(args.abc_path)
+        converter = AigToPTConverter(args.abc_path, bench_format=args.bench_format)
 
         if args.batch or Path(args.input).is_dir():
             print(f"Converting AIG files in {args.input} directly to PT...")
