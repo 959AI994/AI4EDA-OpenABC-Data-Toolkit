@@ -13,12 +13,13 @@ from typing import Tuple, Optional
 class AigToBenchConverter:
     """Convert AIG files to BENCH format using ABC"""
 
-    def __init__(self, abc_path: Optional[str] = None):
+    def __init__(self, abc_path: Optional[str] = None, bench_format: str = "auto"):
         """
         Initialize converter
 
         Args:
             abc_path: Path to ABC executable. If None, uses default location
+            bench_format: Desired BENCH output mode: "auto" | "gate" | "lut"
         """
         if abc_path is None:
             # Try to find ABC in project directory first (prefer abc over yosys-abc)
@@ -31,6 +32,39 @@ class AigToBenchConverter:
                 self.abc_path = "abc"
         else:
             self.abc_path = abc_path
+
+        mode = (bench_format or "auto").strip().lower()
+        if mode not in {"auto", "gate", "lut"}:
+            mode = "auto"
+        self.bench_format = mode
+
+    @staticmethod
+    def _is_lut_bench(bench_file: str) -> bool:
+        """Lightweight detection of LUT-style BENCH output."""
+        try:
+            with open(bench_file, "r", errors="ignore") as f:
+                # Read a small prefix; enough to detect LUT lines
+                text = f.read(8192)
+            return "LUT " in text or "LUT(" in text
+        except Exception:
+            return False
+
+    def _bench_cmd_candidates(self, aig_file: str, bench_file: str) -> list[str]:
+        """
+        Generate write_bench command candidates.
+        Note: in some yosys-abc builds, '-l' toggles LUT mode; defaults vary by build.
+        """
+        base = f"read_aiger {aig_file}; short_names;"
+        plain = f"{base} write_bench {bench_file}; quit"
+        with_l = f"{base} write_bench -l {bench_file}; quit"
+
+        if self.bench_format == "gate":
+            # Prefer non-LUT output; try both to handle toggle ambiguity.
+            return [plain, with_l]
+        if self.bench_format == "lut":
+            return [with_l, plain]
+        # auto
+        return [plain, with_l]
 
     def convert(self, aig_file: str, bench_file: str, timeout: int = 60) -> Tuple[bool, str]:
         """
@@ -49,24 +83,33 @@ class AigToBenchConverter:
         if output_dir:
             os.makedirs(output_dir, exist_ok=True)
 
-        # ABC command: read AIG, apply short_names, write BENCH
-        abc_cmd = f'read_aiger {aig_file}; short_names; write_bench {bench_file}; quit'
-
         try:
-            result = subprocess.run(
-                [self.abc_path, '-c', abc_cmd],
-                capture_output=True,
-                text=True,
-                timeout=timeout
-            )
+            last_error = ""
+            for abc_cmd in self._bench_cmd_candidates(aig_file, bench_file):
+                result = subprocess.run(
+                    [self.abc_path, '-c', abc_cmd],
+                    capture_output=True,
+                    text=True,
+                    timeout=timeout
+                )
 
-            if result.returncode == 0 and os.path.exists(bench_file):
-                # Get file size for reporting
+                if result.returncode != 0 or not os.path.exists(bench_file):
+                    last_error = result.stderr if result.stderr else result.stdout
+                    continue
+
+                is_lut = self._is_lut_bench(bench_file)
+                if self.bench_format == "gate" and is_lut:
+                    last_error = "Generated LUT-style BENCH while gate-level was requested"
+                    continue
+                if self.bench_format == "lut" and not is_lut:
+                    last_error = "Generated gate-level BENCH while LUT-style was requested"
+                    continue
+
                 size = os.path.getsize(bench_file)
-                return True, f"Success ({size} bytes)"
-            else:
-                error_msg = result.stderr if result.stderr else result.stdout
-                return False, f"ABC error: {error_msg[:100]}"
+                mode = "LUT" if is_lut else "gate"
+                return True, f"Success ({size} bytes, mode={mode})"
+
+            return False, f"ABC error: {last_error[:200] if last_error else 'write_bench failed'}"
 
         except subprocess.TimeoutExpired:
             return False, f"Timeout (>{timeout}s)"
@@ -126,7 +169,8 @@ class AigToBenchConverter:
 
 
 def convert_aig_to_bench(aig_file: str, bench_file: str,
-                        abc_path: Optional[str] = None) -> Tuple[bool, str]:
+                        abc_path: Optional[str] = None,
+                        bench_format: str = "auto") -> Tuple[bool, str]:
     """
     Convenience function to convert a single AIG file to BENCH
 
@@ -138,5 +182,5 @@ def convert_aig_to_bench(aig_file: str, bench_file: str,
     Returns:
         Tuple of (success: bool, message: str)
     """
-    converter = AigToBenchConverter(abc_path)
+    converter = AigToBenchConverter(abc_path, bench_format=bench_format)
     return converter.convert(aig_file, bench_file)
