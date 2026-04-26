@@ -17,14 +17,16 @@ from .graphml_to_pt import GraphMLToPTConverter
 class AigToPTConverter:
     """Convert AIG files directly to PyTorch Geometric format"""
 
-    def __init__(self, abc_path: Optional[str] = None):
+    def __init__(self, abc_path: Optional[str] = None, bench_format: Optional[str] = None):
         """
         Initialize converter
 
         Args:
             abc_path: Path to ABC executable
+            bench_format: Desired BENCH output mode: "auto" | "gate" | "lut".
+                         If None, read from env in AigToBenchConverter.
         """
-        self.aig_to_bench = AigToBenchConverter(abc_path)
+        self.aig_to_bench = AigToBenchConverter(abc_path, bench_format=bench_format)
         self.bench_to_graphml = BenchToGraphMLConverter()
         self.graphml_to_pt = GraphMLToPTConverter()
 
@@ -160,7 +162,8 @@ class AigToPTConverter:
 
 def convert_aig_to_pt(aig_file: str, pt_file: str,
                      abc_path: Optional[str] = None,
-                     keep_intermediate: bool = False) -> Tuple[bool, str]:
+                     keep_intermediate: bool = False,
+                     bench_format: Optional[str] = None) -> Tuple[bool, str]:
     """
     Convenience function to convert AIG directly to PT format
 
@@ -173,5 +176,5 @@ def convert_aig_to_pt(aig_file: str, pt_file: str,
     Returns:
         Tuple of (success: bool, message: str)
     """
-    converter = AigToPTConverter(abc_path)
+    converter = AigToPTConverter(abc_path, bench_format=bench_format)
     return converter.convert(aig_file, pt_file, keep_intermediate)
