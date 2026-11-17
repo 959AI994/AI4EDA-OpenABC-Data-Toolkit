@@ -1,0 +1,19 @@
+[Unit]
+Description=AI4EDA Data Toolkit Web Interface
+After=network.target
+
+[Service]
+Type=notify
+User=ai4eda
+Group=ai4eda
+WorkingDirectory=/opt/ai4eda/web
+Environment="PATH=/opt/ai4eda/.venv/bin:/usr/local/bin:/usr/bin:/bin"
+ExecStart=/opt/ai4eda/.venv/bin/gunicorn -c gunicorn_config.py app:app
+ExecReload=/bin/kill -s HUP $MAINPID
+KillMode=mixed
+TimeoutStopSec=5
+PrivateTmp=true
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

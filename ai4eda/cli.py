@@ -127,6 +127,16 @@ Examples:
     recipe_gen_parser.add_argument('output_dir', help='Output directory for recipes')
     recipe_gen_parser.add_argument('--num-recipes', type=int, default=10, help='Number of recipes to generate')
     recipe_gen_parser.add_argument('--lib', help='Liberty library file')
+    recipe_gen_parser.add_argument('--length-distribution', choices=['uniform', 'gaussian'],
+                                   default='uniform', help='Recipe length sampling (default: uniform)')
+    recipe_gen_parser.add_argument('--min-ops', type=int, default=3, help='Minimum recipe length (default: 3)')
+    recipe_gen_parser.add_argument('--max-ops', type=int, default=8, help='Maximum recipe length (default: 8)')
+    recipe_gen_parser.add_argument('--mean-length', type=float, help='Gaussian mean (default: max-ops / 2)')
+    recipe_gen_parser.add_argument('--std-length', type=float, help='Gaussian std (default: max(max-ops / 4, 1))')
+    recipe_gen_parser.add_argument('--seed', type=int, help='Seed for reproducible recipe sampling')
+    recipe_gen_parser.add_argument('--unique', action='store_true', help='Generate distinct operation sequences')
+    recipe_gen_parser.add_argument('--vocabulary', choices=['default', 'gualo'], default='default',
+                                   help='ABC operation set (default: existing 10 operations; gualo: 13)')
 
     return parser
 
@@ -270,7 +280,15 @@ def handle_recipe(args):
         generator = SynthesisRecipeGenerator(args.lib)
         print(f"Generating {args.num_recipes} synthesis recipes...")
 
-        sequences = generator.generate_optimization_sequences(args.num_recipes)
+        try:
+            sequences = generator.generate_optimization_sequences(
+                args.num_recipes, max_ops=args.max_ops,
+                distribution=args.length_distribution, min_ops=args.min_ops,
+                mean=args.mean_length, std=args.std_length, seed=args.seed,
+                unique=args.unique, vocabulary=args.vocabulary,
+            )
+        except ValueError as exc:
+            raise SystemExit(f'Invalid recipe sampling settings: {exc}') from None
 
         output_dir = Path(args.output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)

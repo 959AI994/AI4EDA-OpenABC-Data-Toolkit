@@ -5,8 +5,18 @@ Generates ABC synthesis scripts for logic optimization
 """
 
 import os
+import math
+import random
 from pathlib import Path
 from typing import List, Optional, Dict
+
+
+# Stable GUALO token IDs: index + 1. Zero is reserved for padding.
+GUALO_OPS = (
+    'refactor', 'refactor -z', 'refactor -l', 'refactor -l -z',
+    'rewrite', 'rewrite -z', 'rewrite -l', 'rewrite -l -z',
+    'resub', 'resub -z', 'resub -l', 'resub -l -z', 'balance',
+)
 
 
 class SynthesisRecipeGenerator:
@@ -132,19 +142,29 @@ class SynthesisRecipeGenerator:
         return '; '.join(script_lines)
 
     def generate_optimization_sequences(self, num_sequences: int = 10,
-                                        max_ops: int = 8) -> List[List[str]]:
+                                        max_ops: int = 8, *, distribution: str = 'uniform',
+                                        min_ops: int = 3, mean: Optional[float] = None,
+                                        std: Optional[float] = None, seed: Optional[int] = None,
+                                        unique: bool = False, vocabulary: str = 'default') -> List[List[str]]:
         """
         Generate multiple random optimization sequences
 
         Args:
             num_sequences: Number of sequences to generate
             max_ops: Maximum operations per sequence
+            distribution: 'uniform' (legacy default) or 'gaussian'. Gaussian
+                lengths are drawn from N(mean,std), rejected outside [min,max],
+                then rounded to the nearest integer (not clipped).
+            min_ops: Minimum length; use 1 for GUALO.
+            mean, std: Gaussian parameters, default max_ops/2 and
+                max(max_ops/4, 1). For a fixed length, mean defaults to that length.
+            seed: Optional local RNG seed, independent of global RNG state.
+            unique: Reject duplicate operation sequences.
+            vocabulary: 'default' or the stable 13-action 'gualo' vocabulary.
 
         Returns:
             List of operation sequences
         """
-        import random
-
         sequences = []
         available_ops = [
             'balance', 'rewrite', 'refactor', 'resub',
@@ -152,10 +172,50 @@ class SynthesisRecipeGenerator:
             'resub -K 6', 'resub -K 8', 'resub -K 10'
         ]
 
-        for _ in range(num_sequences):
-            seq_length = random.randint(3, max_ops)
-            sequence = [random.choice(available_ops) for _ in range(seq_length)]
-            sequences.append(sequence)
+        if distribution not in ('uniform', 'gaussian'):
+            raise ValueError('Unknown sampling distribution')
+        if vocabulary not in ('default', 'gualo'):
+            raise ValueError('Unknown operation vocabulary')
+        if num_sequences < 0 or min_ops < 1 or max_ops < min_ops:
+            raise ValueError('Require count>=0 and 1<=min_ops<=max_ops')
+        if vocabulary == 'gualo':
+            available_ops = list(GUALO_OPS)
+        if mean is None:
+            mean = min_ops if min_ops == max_ops else max_ops / 2
+        if std is None:
+            std = max(max_ops / 4, 1)
+        if distribution == 'gaussian' and (
+            not math.isfinite(mean) or not math.isfinite(std)
+            or std <= 0 or not min_ops <= mean <= max_ops
+        ):
+            raise ValueError('Gaussian mean must be inside bounds and std must be finite and positive')
+        if unique and num_sequences > sum(
+            len(available_ops) ** n for n in range(min_ops, max_ops + 1)
+        ):
+            raise ValueError('Requested more unique sequences than the vocabulary permits')
+        rng = random.Random(seed) if seed is not None else random
+        seen = set()
+        # Bound both duplicate retries and Gaussian rejection attempts.
+        budget = max(10000, num_sequences * 1000)
+        attempts = 0
+        while len(sequences) < num_sequences:
+            attempts += 1
+            if attempts > budget:
+                raise ValueError('Sampling exhausted its attempt budget; relax the requested settings')
+            if min_ops == max_ops:
+                seq_length = min_ops
+            elif distribution == 'uniform':
+                seq_length = rng.randint(min_ops, max_ops)
+            else:
+                sample = rng.gauss(mean, std)
+                if not min_ops <= sample <= max_ops:
+                    continue
+                seq_length = round(sample)
+            sequence = tuple(rng.choice(available_ops) for _ in range(seq_length))
+            if unique and sequence in seen:
+                continue
+            seen.add(sequence)
+            sequences.append(list(sequence))
 
         return sequences
 

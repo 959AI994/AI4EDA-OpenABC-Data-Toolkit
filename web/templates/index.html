@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI4EDA Data Toolkit - Web Interface</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <i class="fas fa-microchip"></i>
+                <h1>SJTU ACE Lab - AI4EDA Data Toolkit</h1>
+            </div>
+            <div class="tagline">
+                EDA Data Processing & Analysis Platform
+            </div>
+            <button class="help-btn" id="helpBtn" title="Help & Documentation">
+                <i class="fas fa-question-circle"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="nav-tabs">
+        <div class="container">
+            <button class="tab-btn active" data-tab="conversion">
+                <i class="fas fa-exchange-alt"></i>
+                Format Conversion
+            </button>
+            <button class="tab-btn" data-tab="metrics">
+                <i class="fas fa-chart-line"></i>
+                Metrics Analysis
+            </button>
+            <button class="tab-btn" data-tab="analysis">
+                <i class="fas fa-brain"></i>
+                AI Code Analysis
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container">
+        <!-- Tab Content: Conversion -->
+        <div id="tab-conversion" class="tab-content active">
+            <section class="conversion-section">
+                <div class="card">
+                    <h2><i class="fas fa-cogs"></i> Format Conversion</h2>
+
+                    <!-- Batch Mode Toggle -->
+                    <div class="batch-toggle">
+                        <label class="switch">
+                            <input type="checkbox" id="batchMode">
+                            <span class="slider"></span>
+                        </label>
+                        <span class="toggle-label">Batch Processing Mode</span>
+                    </div>
+
+                    <form id="conversionForm" enctype="multipart/form-data">
+                        <!-- Conversion Type Selection -->
+                        <div class="form-group">
+                            <label for="conversionType">
+                                <i class="fas fa-stream"></i> Conversion Type
+                            </label>
+                            <select id="conversionType" name="conversion_type" required>
+                                <option value="">-- Select Conversion --</option>
+                                {% for key, conv in conversions.items() %}
+                                <option value="{{ key }}" data-input="{{ conv.input }}" data-output="{{ conv.output }}">
+                                    {{ conv.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Single File Upload -->
+                        <div class="form-group" id="singleFileGroup">
+                            <label for="fileInput">
+                                <i class="fas fa-file-upload"></i> Select File
+                            </label>
+                            <div class="file-upload-wrapper">
+                                <input type="file" id="fileInput" name="file">
+                                <div class="file-upload-display" id="singleUploadDisplay">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <span id="fileLabel">Choose a file or drag & drop here</span>
+                                </div>
+                            </div>
+                            <div class="file-info" id="fileInfo"></div>
+                        </div>
+
+                        <!-- Batch File Upload -->
+                        <div class="form-group" id="batchFileGroup" style="display: none;">
+                            <label for="batchFileInput">
+                                <i class="fas fa-layer-group"></i> Select Multiple Files
+                            </label>
+                            <div class="file-upload-wrapper">
+                                <input type="file" id="batchFileInput" name="files" multiple accept=".aig,.bench,.graphml,.v,.sv,.pt,.zip">
+                                <div class="file-upload-display" id="batchUploadDisplay">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <span id="batchFileLabel">Choose files, ZIP archive, or drag & drop here</span>
+                                </div>
+                            </div>
+                            <div id="batchFileList" class="batch-file-list"></div>
+                            <small style="color: #666;">You can upload multiple files or a ZIP archive containing your files</small>
+                        </div>
+
+                        <!-- Additional Options -->
+                        <div class="form-group" id="topModuleGroup" style="display: none;">
+                            <label for="topModule">
+                                <i class="fas fa-sitemap"></i> Top Module (Optional)
+                            </label>
+                            <input type="text" id="topModule" name="top_module" placeholder="Enter top module name">
+                            <small>Leave empty for auto-detection</small>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div style="display: flex; gap: 1rem;">
+                            <button type="submit" class="btn btn-primary" id="submitBtn" style="flex: 1;">
+                                <i class="fas fa-sync-alt"></i> <span id="submitBtnText">Convert File</span>
+                            </button>
+                            <button type="button" class="btn btn-secondary" id="resetConversionBtn">
+                                <i class="fas fa-redo"></i> Reset
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Progress Section -->
+                    <div id="progressSection" class="progress-section" style="display: none;">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <p class="progress-text" id="progressText">Processing...</p>
+                    </div>
+
+                    <!-- Result Section -->
+                    <div id="resultSection" class="result-section" style="display: none;"></div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Tab Content: Metrics -->
+        <div id="tab-metrics" class="tab-content" style="display: none;">
+            <section class="metrics-section">
+                <div class="card">
+                    <h2><i class="fas fa-chart-line"></i> Metrics Analysis</h2>
+                    <p class="section-description">
+                        Calculate area and delay metrics for your designs using Liberty libraries.
+                        Supports AIG and BENCH formats.
+                    </p>
+
+                    <!-- Batch Mode Toggle -->
+                    <div class="batch-toggle">
+                        <label class="switch">
+                            <input type="checkbox" id="metricsBatchMode">
+                            <span class="slider"></span>
+                        </label>
+                        <span class="toggle-label">Batch Processing Mode</span>
+                    </div>
+
+                    <form id="metricsForm" enctype="multipart/form-data">
+                        <!-- Single File Upload -->
+                        <div class="form-group" id="metricsSingleFileGroup">
+                            <label for="metricsFileInput">
+                                <i class="fas fa-file-upload"></i> Select Design File
+                            </label>
+                            <div class="file-upload-wrapper">
+                                <input type="file" id="metricsFileInput" name="file" accept=".aig,.bench">
+                                <div class="file-upload-display">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <span id="metricsFileLabel">Choose an AIG or BENCH file</span>
+                                </div>
+                            </div>
+                            <div class="file-info" id="metricsFileInfo"></div>
+                        </div>
+
+                        <!-- Batch File Upload -->
+                        <div class="form-group" id="metricsBatchFileGroup" style="display: none;">
+                            <label for="metricsBatchFileInput">
+                                <i class="fas fa-layer-group"></i> Select Multiple Files
+                            </label>
+                            <div class="file-upload-wrapper">
+                                <input type="file" id="metricsBatchFileInput" name="files" multiple accept=".aig,.bench,.zip">
+                                <div class="file-upload-display">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <span>Choose AIG/BENCH files, ZIP archive, or drag & drop here</span>
+                                </div>
+                            </div>
+                            <div id="metricsBatchFileList" class="batch-file-list"></div>
+                            <small style="color: #666;">You can upload multiple files or a ZIP archive containing your files</small>
+                        </div>
+
+                        <!-- Liberty Library Selection -->
+                        <div class="form-group">
+                            <label for="libFile">
+                                <i class="fas fa-book"></i> Liberty Library
+                            </label>
+                            <select id="libFile" name="lib_file" required>
+                                <option value="asap7">ASAP7 (7nm)</option>
+                                <option value="nangate45">NanGate45 (45nm)</option>
+                                <option value="custom">Upload Custom Library</option>
+                            </select>
+                        </div>
+
+                        <!-- Custom Library Upload -->
+                        <div class="form-group" id="customLibGroup" style="display: none;">
+                            <label for="customLibInput">
+                                <i class="fas fa-upload"></i> Upload Liberty File
+                            </label>
+                            <input type="file" id="customLibInput" name="custom_lib" accept=".lib">
+                        </div>
+
+                        <!-- Optimization Script -->
+                        <div class="form-group">
+                            <label for="optScript">
+                                <i class="fas fa-code"></i> ABC Optimization Script (Optional)
+                            </label>
+                            <input type="text" id="optScript" name="opt_script" placeholder="e.g., balance; rewrite; refactor">
+                            <small>Leave empty to use default optimization</small>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div style="display: flex; gap: 1rem;">
+                            <button type="submit" class="btn btn-primary" id="metricsSubmitBtn" style="flex: 1;">
+                                <i class="fas fa-calculator"></i> <span id="metricsSubmitBtnText">Calculate Metrics</span>
+                            </button>
+                            <button type="button" class="btn btn-secondary" id="resetMetricsBtn">
+                                <i class="fas fa-redo"></i> Reset
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Progress Section -->
+                    <div id="metricsProgressSection" class="progress-section" style="display: none;">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="metricsProgressFill"></div>
+                        </div>
+                        <p class="progress-text" id="metricsProgressText">Calculating metrics...</p>
+                    </div>
+
+                    <!-- Result Section -->
+                    <div id="metricsResultSection" class="result-section" style="display: none;"></div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Tab Content: AI Code Analysis -->
+        <div id="tab-analysis" class="tab-content" style="display: none;">
+            <section class="analysis-section">
+                <div class="card">
+                    <h2><i class="fas fa-brain"></i> AI-Powered Verilog Analysis</h2>
+                    <p class="section-description">
+                        Upload your Verilog code and ask questions. Our AI will analyze the code and provide detailed insights,
+                        explanations, optimization suggestions, and answer your specific questions.
+                    </p>
+
+                    <form id="analysisForm" enctype="multipart/form-data">
+                        <!-- File Upload -->
+                        <div class="form-group">
+                            <label for="analysisFileInput">
+                                <i class="fas fa-file-code"></i> Verilog File
+                            </label>
+                            <div class="file-upload-wrapper">
+                                <input type="file" id="analysisFileInput" name="file" accept=".v,.sv" required>
+                                <div class="file-upload-display" id="analysisFileLabel">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <span>Choose a Verilog file (.v, .sv) or drag & drop here</span>
+                                </div>
+                            </div>
+                            <div class="file-info" id="analysisFileInfo" style="display: none;"></div>
+                            <small>Maximum file size: 100KB</small>
+                        </div>
+
+                        <!-- Prompt Input -->
+                        <div class="form-group">
+                            <label for="analysisPrompt">
+                                <i class="fas fa-question-circle"></i> Your Question / Request
+                            </label>
+
+                            <!-- Quick Actions and Language Toggle -->
+                            <div style="margin-bottom: 0.8rem; display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
+                                <button type="button" class="btn-quick-action" onclick="setDebugPrompt()">
+                                    <i class="fas fa-bug"></i> Debug
+                                </button>
+                                <button type="button" class="btn-quick-action" onclick="setExplainPrompt()">
+                                    <i class="fas fa-info-circle"></i> Explain
+                                </button>
+                                <button type="button" class="btn-quick-action" onclick="setOptimizePrompt()">
+                                    <i class="fas fa-rocket"></i> Optimize
+                                </button>
+                                <div style="flex-grow: 1;"></div>
+                                <button type="button" class="btn-quick-action" id="languageToggle" onclick="toggleLanguage()" title="Switch Language">
+                                    <i class="fas fa-language"></i> English
+                                </button>
+                            </div>
+
+                            <textarea
+                                id="analysisPrompt"
+                                name="prompt"
+                                rows="4"
+                                placeholder="Examples:
+- Explain what this module does
+- Find potential bugs or issues
+- Suggest optimizations for performance
+- Convert this to a state machine diagram
+- Explain the timing constraints"
+                                required
+                            ></textarea>
+                            <small>Click a quick action above or write your own custom prompt. Use language toggle to switch between Chinese/English prompts.</small>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div style="display: flex; gap: 1rem;">
+                            <button type="submit" id="analysisSubmitBtn" class="btn btn-primary" style="flex: 1;">
+                                <i class="fas fa-brain"></i>
+                                <span id="analysisSubmitBtnText">Analyze with AI</span>
+                            </button>
+                            <button type="button" class="btn btn-secondary" id="resetAnalysisBtn">
+                                <i class="fas fa-redo"></i> Reset
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Progress Section -->
+                    <div id="analysisProgressSection" class="progress-section" style="display: none;">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="analysisProgressFill"></div>
+                        </div>
+                        <p class="progress-text" id="analysisProgressText">AI is analyzing your code...</p>
+                    </div>
+
+                    <!-- Result Section -->
+                    <div id="analysisResultSection" class="result-section" style="display: none;"></div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Help Modal -->
+    <div id="helpModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-book"></i> Help & Documentation</h2>
+                <button class="modal-close" id="closeHelpModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="help-section">
+                    <h3><i class="fas fa-exchange-alt"></i> Format Conversion</h3>
+                    <p>Convert between multiple EDA data formats:</p>
+                    <ul>
+                        <li><strong>AIG to BENCH</strong>: And-Inverter Graph to BENCH netlist</li>
+                        <li><strong>BENCH to GraphML</strong>: BENCH netlist to GraphML format</li>
+                        <li><strong>GraphML to PyTorch</strong>: GraphML to PyTorch Geometric format</li>
+                        <li><strong>Verilog to AIG</strong>: Verilog HDL to AIG format</li>
+                        <li><strong>AIG to PyTorch (Direct)</strong>: One-step AIG to PyTorch conversion</li>
+                        <li><strong>Verilog to PyTorch (Direct)</strong>: One-step Verilog to PyTorch conversion</li>
+                    </ul>
+                </div>
+
+                <div class="help-section">
+                    <h3><i class="fas fa-chart-line"></i> Metrics Analysis</h3>
+                    <p>Calculate area and delay metrics for digital circuits:</p>
+                    <ul>
+                        <li>Supports AIG and BENCH file formats</li>
+                        <li>Uses Liberty library files (.lib) for accurate metrics</li>
+                        <li>Powered by Berkeley ABC synthesis tool</li>
+                        <li>Batch processing support for multiple files</li>
+                    </ul>
+                </div>
+
+                <div class="help-section">
+                    <h3><i class="fas fa-brain"></i> AI Code Analysis</h3>
+                    <p>Analyze Verilog code with AI-powered insights:</p>
+                    <ul>
+                        <li>Upload Verilog (.v, .sv) files for analysis</li>
+                        <li>Ask specific questions about your code</li>
+                        <li>Get explanations, bug detection, and optimization suggestions</li>
+                        <li>Powered by DeepSeek AI</li>
+                    </ul>
+                </div>
+
+                <div class="help-section">
+                    <h3><i class="fas fa-terminal"></i> CLI Usage</h3>
+                    <p>Use the command-line interface for batch processing and automation:</p>
+
+                    <h4>Basic Command Structure</h4>
+                    <code>ai4eda &lt;command&gt; &lt;subcommand&gt; [options]</code>
+
+                    <h4>Format Conversion Examples</h4>
+                    <p><strong>AIG to BENCH:</strong></p>
+                    <code>ai4eda convert aig2bench input.aig output.bench</code>
+
+                    <p><strong>BENCH to GraphML:</strong></p>
+                    <code>ai4eda convert bench2graphml input.bench output.graphml</code>
+
+                    <p><strong>GraphML to PyTorch:</strong></p>
+                    <code>ai4eda convert graphml2pt input.graphml output.pt</code>
+
+                    <p><strong>Verilog to AIG:</strong></p>
+                    <code>ai4eda convert verilog2aig input.v output.aig --top-module my_module</code>
+
+                    <p><strong>Direct Conversions (One-Step):</strong></p>
+                    <code>ai4eda convert aig2pt input.aig output.pt</code>
+                    <code>ai4eda convert verilog2pt input.v output.pt --top-module my_module</code>
+
+                    <h4>Batch Processing</h4>
+                    <code>ai4eda convert aig2bench input_dir/ output_dir/ --batch --recursive</code>
+
+                    <h4>Metrics Calculation</h4>
+                    <code>ai4eda metrics input.aig --lib libs/asap7.lib</code>
+                    <code>ai4eda metrics input.aig --lib libs/asap7.lib --opt-script "balance; rewrite"</code>
+
+                    <p><strong>Batch metrics:</strong></p>
+                    <code>ai4eda metrics input_dir/ --lib libs/asap7.lib --batch</code>
+                </div>
+
+                <div class="help-section">
+                    <h3><i class="fab fa-python"></i> Python API</h3>
+                    <p>Import and use converters in your Python code:</p>
+                    <code>from ai4eda.converters import *</code>
+
+                    <h4>Example Usage</h4>
+                    <code>from ai4eda.converters.aig_to_bench import AigToBenchConverter
+converter = AigToBenchConverter()
+converter.convert('input.aig', 'output.bench')</code>
+                </div>
+
+                <div class="help-section">
+                    <h3><i class="fas fa-code-branch"></i> GitHub Repository</h3>
+                    <p>View source code, report issues, and contribute:</p>
+                    <code><a href="https://github.com/959AI994/AI4EDA-OpenABC-Data-Toolkit" target="_blank" rel="noopener">https://github.com/959AI994/AI4EDA-OpenABC-Data-Toolkit</a></code>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>AI4EDA Data Toolkit</h4>
+                    <p>Open Source EDA Data Processing Platform</p>
+                    <p>MIT License &copy; 2026</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Developed By</h4>
+                    <p><strong>Jingxin Wang</strong></p>
+                    <p>Ph.D. Candidate</p>
+                    <p>ACE Lab, Shanghai Jiao Tong University</p>
+                    <p><i class="fas fa-envelope"></i> <a href="mailto:jingxin.wang@sjtu.edu.cn">jingxin.wang@sjtu.edu.cn</a></p>
+                </div>
+                <div class="footer-section">
+                    <h4>Powered By</h4>
+                    <p>PyTorch Geometric</p>
+                    <p>Berkeley ABC</p>
+                    <p>Flask Framework</p>
+                    <p>DeepSeek AI</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/static/js/main.js"></script>
+</body>
+</html>

@@ -18,7 +18,20 @@ test_data/recipes/*
 !test_data/aig/
 !test_data/verilog/
 
-web/
+# Web source is public; deployment secrets and generated files stay local.
+.env
+.env.*
+!.env.example
+*.pid
+*.bak
+abc.history
+web/uploads/
+web/outputs/
+web/logs/
+web/.venv/
+web/venv/
+web/ai4eda-web.service
+web/nginx-ai4eda.conf
 
 # 大文件 - 不应提交到 Git
 bin/

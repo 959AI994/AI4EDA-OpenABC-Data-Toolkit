@@ -115,6 +115,20 @@ Analyze your Verilog code using DeepSeek AI for code understanding, bug detectio
 
 For detailed instructions on starting and using the web interface, see [web/README.md](web/README.md).
 
+The Web backend and frontend are included in `web/`. From the repository root:
+
+```bash
+python -m pip install -e .
+python -m pip install -r web/requirements.txt
+cp web/.env.example web/.env
+python web/app.py
+```
+
+Open `http://127.0.0.1:5000`. AI analysis optionally uses your own API key in
+`web/.env`; conversion and ABC metrics do not need a key. Runtime files and local
+credentials remain ignored. See the Web README for tool setup and deployment.
+
+
 
 ## Features (CLI Version)
 
@@ -378,6 +392,47 @@ ai4eda recipe generate input.aig output_dir/ --num-recipes 100
 With Liberty library:
 ```bash
 ai4eda recipe generate input.aig output_dir/ --num-recipes 100 --lib libs/asap7.lib
+```
+
+#### Gaussian recipe lengths (GUALO)
+
+The default remains uniform length sampling from 3 to 8 operations with the
+existing 10-operation vocabulary. To generate variable-length GUALO recipes:
+
+```bash
+ai4eda recipe generate input.aig gaussian_recipes/ \
+  --num-recipes 1500 --length-distribution gaussian \
+  --min-ops 1 --max-ops 20 --mean-length 10 --std-length 5 \
+  --seed 42 --unique --vocabulary gualo
+```
+
+Lengths are sampled from a normal distribution with mean 10 and standard
+deviation 5, rejected outside [1, 20], then rounded to integers. This is a
+**truncated Gaussian**, not clipping (which would accumulate samples at the
+bounds). The realized mean need not equal 10 exactly. Commands within each
+recipe are sampled uniformly; `--unique` rejects duplicate sequences and can
+also slightly change the resulting length distribution. `--seed` makes the
+sampling reproducible without changing Python's global random state.
+
+`--vocabulary gualo` selects the 13 operations in `GUALO_OPS` in
+`ai4eda/core/synthesis_recipe.py`; tuple index + 1 is the GUALO token ID (0 is
+padding). Omit this option to retain the Toolkit's original operation set.
+
+The command writes `recipe_*.script`; it does **not** run ABC or create QoR
+labels. Area and delay must be measured by executing each recipe with ABC and
+a fixed technology library (see **Metrics Calculation** above). Graphs,
+recipe token IDs, and measured labels then need to be aligned and exported to
+the format required by the training code.
+
+The Python API supports the same settings:
+
+```python
+from ai4eda.core.synthesis_recipe import SynthesisRecipeGenerator
+
+sequences = SynthesisRecipeGenerator().generate_optimization_sequences(
+    1500, max_ops=20, min_ops=1, distribution="gaussian",
+    mean=10, std=5, seed=42, unique=True, vocabulary="gualo",
+)
 ```
 
 ## Python API
