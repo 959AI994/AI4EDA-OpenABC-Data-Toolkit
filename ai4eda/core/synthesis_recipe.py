@@ -155,7 +155,7 @@ class SynthesisRecipeGenerator:
             distribution: 'uniform' (legacy default) or 'gaussian'. Gaussian
                 lengths are drawn from N(mean,std), rejected outside [min,max],
                 then rounded to the nearest integer (not clipped).
-            min_ops: Minimum length; use 1 for GUALO.
+            min_ops: Minimum number of operations per recipe.
             mean, std: Gaussian parameters, default max_ops/2 and
                 max(max_ops/4, 1). For a fixed length, mean defaults to that length.
             seed: Optional local RNG seed, independent of global RNG state.

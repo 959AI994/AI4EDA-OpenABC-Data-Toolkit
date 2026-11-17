@@ -394,35 +394,23 @@ With Liberty library:
 ai4eda recipe generate input.aig output_dir/ --num-recipes 100 --lib libs/asap7.lib
 ```
 
-#### Gaussian recipe lengths (GUALO)
+#### Gaussian recipe lengths
 
-The default remains uniform length sampling from 3 to 8 operations with the
-existing 10-operation vocabulary. To generate variable-length GUALO recipes:
+Sample recipe lengths from a truncated Gaussian distribution, with configurable
+bounds, mean, and standard deviation. Operations are sampled uniformly from the
+selected operation set. The default remains uniform length sampling from 3 to 8.
 
 ```bash
 ai4eda recipe generate input.aig gaussian_recipes/ \
-  --num-recipes 1500 --length-distribution gaussian \
+  --num-recipes 1000 --length-distribution gaussian \
   --min-ops 1 --max-ops 20 --mean-length 10 --std-length 5 \
-  --seed 42 --unique --vocabulary gualo
+  --seed 42 --unique
 ```
 
-Lengths are sampled from a normal distribution with mean 10 and standard
-deviation 5, rejected outside [1, 20], then rounded to integers. This is a
-**truncated Gaussian**, not clipping (which would accumulate samples at the
-bounds). The realized mean need not equal 10 exactly. Commands within each
-recipe are sampled uniformly; `--unique` rejects duplicate sequences and can
-also slightly change the resulting length distribution. `--seed` makes the
-sampling reproducible without changing Python's global random state.
-
-`--vocabulary gualo` selects the 13 operations in `GUALO_OPS` in
-`ai4eda/core/synthesis_recipe.py`; tuple index + 1 is the GUALO token ID (0 is
-padding). Omit this option to retain the Toolkit's original operation set.
-
-The command writes `recipe_*.script`; it does **not** run ABC or create QoR
-labels. Area and delay must be measured by executing each recipe with ABC and
-a fixed technology library (see **Metrics Calculation** above). Graphs,
-recipe token IDs, and measured labels then need to be aligned and exported to
-the format required by the training code.
+This example samples lengths from N(10, 5²), rejects values outside [1, 20],
+and rounds to integers. `--seed` makes sampling reproducible; `--unique` removes
+duplicate recipes. The command generates ABC scripts; use `ai4eda metrics` to
+obtain area and delay labels.
 
 The Python API supports the same settings:
 
@@ -430,8 +418,8 @@ The Python API supports the same settings:
 from ai4eda.core.synthesis_recipe import SynthesisRecipeGenerator
 
 sequences = SynthesisRecipeGenerator().generate_optimization_sequences(
-    1500, max_ops=20, min_ops=1, distribution="gaussian",
-    mean=10, std=5, seed=42, unique=True, vocabulary="gualo",
+    1000, max_ops=20, min_ops=1, distribution="gaussian",
+    mean=10, std=5, seed=42, unique=True,
 )
 ```
 
